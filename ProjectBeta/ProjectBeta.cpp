@@ -75,7 +75,7 @@ public:
 	vector<int> state;
 	vector<int> rewards;
 	void fillq(agent* plearner);
-	void updateq(agent* plearner, int user_input)
+	void updateq(agent* plearner, int user_input);
 };
 
 void domain::init() {
@@ -535,10 +535,10 @@ double act1(agent* plearner, domain* pgrid, int user_input) {   																
 }
 
 double act2(agent* plearner, domain* pgrid, int input) {   																									 // greedy action
-	int Q_up;
-	int Q_down;
-	int Q_right;
-	int Q_left;
+	double Q_up;
+	double Q_down;
+	double Q_right;
+	double Q_left;
 	int state_current;
 	state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 	Q_up = pgrid->qtable[state_current][0];
@@ -546,7 +546,7 @@ double act2(agent* plearner, domain* pgrid, int input) {   																					
 	Q_right = pgrid->qtable[state_current][2];
 	Q_left = pgrid->qtable[state_current][3];
 	double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-	int max = 0;																																			// find max q of current state
+	double max = 0;																																			// find max q of current state
 	for (int i = 0; i < 4; i++) {
 		if (findmax[i] > max) {
 			max = findmax[i];
@@ -591,10 +591,10 @@ double react(agent* plearner, domain* pgrid, int input) {
 	if (input == 0) {
 		prev_state = pgrid->state.at(pgrid->matrix[plearner->ax][plearner->ay - 1]);
 		old_q = pgrid->qtable[prev_state][input];																											// q from last state
-		int Q_up;
-		int Q_down;
-		int Q_right;
-		int Q_left;
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		Q_up = pgrid->qtable[state_current][0];
@@ -602,23 +602,23 @@ double react(agent* plearner, domain* pgrid, int input) {
 		Q_right = pgrid->qtable[state_current][2];
 		Q_left = pgrid->qtable[state_current][3];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-		int max = 0;																																		// current q max
+		double max = 0;																																		// current q max
 		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
 		}
-		int update_q;
+		double update_q;
 		update_q = old_q + plearner->alpha*(reward + plearner->gamma*max - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
 	}
 	if (input == 1) {
 		prev_state = pgrid->state.at(pgrid->matrix[plearner->ax][plearner->ay + 1]);
 		old_q = pgrid->qtable[prev_state][input];																											// q from last state
-		int Q_up;
-		int Q_down;
-		int Q_right;
-		int Q_left;
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		Q_up = pgrid->qtable[state_current][0];
@@ -626,23 +626,23 @@ double react(agent* plearner, domain* pgrid, int input) {
 		Q_right = pgrid->qtable[state_current][2];
 		Q_left = pgrid->qtable[state_current][3];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-		int max = 0;																																		// current q max
+		double max = 0;																																		// current q max
 		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
 		}
-		int update_q;
+		double update_q;
 		update_q = old_q + plearner->alpha*(reward + plearner->gamma*max - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
 	}
 	if (input == 2) {
 		prev_state = pgrid->state.at(pgrid->matrix[plearner->ax+1][plearner->ay]);
 		old_q = pgrid->qtable[prev_state][input];																											// q from last state
-		int Q_up;
-		int Q_down;
-		int Q_right;
-		int Q_left;
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		Q_up = pgrid->qtable[state_current][0];
@@ -650,23 +650,23 @@ double react(agent* plearner, domain* pgrid, int input) {
 		Q_right = pgrid->qtable[state_current][2];
 		Q_left = pgrid->qtable[state_current][3];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-		int max = 0;																																		// current q max
+		double max = 0;																																		// current q max
 		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
 		}
-		int update_q;
+		double update_q;
 		update_q = old_q + plearner->alpha*(reward + plearner->gamma*max - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
 	}
 	if (input == 3) {
 		prev_state = pgrid->state.at(pgrid->matrix[plearner->ax-1][plearner->ay]);
 		old_q = pgrid->qtable[prev_state][input];																											// q from last state
-		int Q_up;
-		int Q_down;
-		int Q_right;
-		int Q_left;
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		Q_up = pgrid->qtable[state_current][0];
@@ -674,16 +674,17 @@ double react(agent* plearner, domain* pgrid, int input) {
 		Q_right = pgrid->qtable[state_current][2];
 		Q_left = pgrid->qtable[state_current][3];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-		int max = 0;																																		// current q max
+		double max = 0;																																		// current q max
 		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
 		}
-		int update_q;
+		double update_q;
 		update_q = old_q + plearner->alpha*(reward + plearner->gamma*max - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
 	}
+	return 0;
 }
 
 int main()
@@ -722,5 +723,3 @@ int main()
 	cout << "You found Waldo! \n" << endl;
 	return 0;
 }
-
-

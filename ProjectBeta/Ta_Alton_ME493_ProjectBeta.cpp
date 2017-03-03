@@ -39,9 +39,6 @@ public:
 	double alpha;
 	double gamma;
 	void init();
-	void decide(agent* plearner);
-	void act1(agent* plearner);
-	void act2(agent*plearner);
 };
 
 void agent::init() {
