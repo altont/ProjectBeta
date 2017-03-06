@@ -17,6 +17,7 @@
 #include <limits>
 #include <ostream>
 #include <iterator>
+#include <math.h>
 
 using namespace std;
 
@@ -46,8 +47,8 @@ public:
 void agent::init() {
 	ax = 0;  																														  // places learner at (0,0)
 	ay = 0;
-	epsilon = 0.1;
-	alpha = 0.1;
+	epsilon = 0.2;
+	alpha = 0.2;
 	gamma = 0.9;
 	agent_position[1] = ax;  																										  // stores agent's x coord in 2nd data entry
 	agent_position[0] = ay;  																										  // stores agent's y coord in 1st data entry
@@ -73,7 +74,7 @@ public:
 	int goal_x;
 	int goal_y;
 	vector<vector<int>> matrix;  																									  // 2D vector
-	vector<vector<double>> qtable;
+	vector<vector<double>> qtable;   																								 // 2D vector
 	vector<int> state;
 	vector<int> rewards;
 	void fillq(agent* plearner);
@@ -99,20 +100,19 @@ void domain::init() {
 			state.push_back(matrix[t][j]);
 		}
 	}
+	for (int i = 0; i < state.size(); i++) {
+		cout << state.at(i);  																							  // fills state vector
+	}
 	for (int t = 0; t < x; t++) {
 		for (int j = 0; j < y; j++) {
 			matrix[t][j] = j + (t*y);
 			rewards.push_back(matrix[t][j]);  																			  // creates rewards vector
 		}
 	}
-
 	for (int i = 0; i < rewards.size(); i++) {
 		rewards.at(i) = -1;  																								  // all rewards = -1
 	}
 	rewards.at(state.at(matrix[goal_x][goal_y])) = 100;  																	  // goal reward = 100
-	for (int i = 0; i < rewards.size(); i++) {
-		cout << " reward vector " << rewards.at(i) << endl;  																							  // shows state vector
-	}
 	cout << endl;
 
 }
@@ -123,7 +123,7 @@ void domain::init() {
 void domain::write() {
 	for (int t = 0; t < x; t++) {
 		for (int j = 0; j < y; j++) {
-			matrix[t][j] = j + t*x;    																					  // populates state with 1's
+			matrix[t][j] = j + t*x;    																					  // populates state value matrix
 		}
 	}
 	cout << endl;
@@ -163,7 +163,7 @@ void domain::fillq(agent* plearner) {
 	for (int i = 0; i < st; i++) {
 		qtable[i].resize(4);  																									  // creates y rows (i think)
 	}
-	double q_init = 0;
+	double q_init = 0;   																											 // initialize small q values for q table
 	for (int i = 0; i < st; i++) {
 		for (int j = 0; j < 4; j++) {
 			q_init = 0.001 * ATRAND;
@@ -173,7 +173,7 @@ void domain::fillq(agent* plearner) {
 	cout << "filled table" << endl;
 	for (int o = 0; o < st; o++) {
 		for (int p = 0; p < 4; p++) {
-			cout << qtable[o][p] << "\t"; 																						  // show q table
+			cout << qtable[o][p] << "\t \t"; 																						  // show q table
 		}
 		cout << endl;
 	}
@@ -187,7 +187,7 @@ void domain::displayq() {
 	int st = x*y;
 	for (int o = 0; o < st; o++) {
 		for (int p = 0; p < 4; p++) {
-			cout << qtable[o][p] << "\t\t"; 																						  // show q table
+			cout << qtable[o][p] << "\t "; 																						  // show q table
 		}
 		cout << endl;
 	}
@@ -203,192 +203,108 @@ void domain::displayq() {
 void up(agent* plearner) {
 	plearner->ay = plearner->ay - 1;    																							  // agent's y position is moved up 1
 	plearner->agent_position[0] = plearner->ay;
-	cout << "moved up" << endl;
+	/*cout << "moved up" << endl;*/
 };
 
 void down(agent* plearner) {
 	plearner->ay = plearner->ay + 1;    																							  // agent's y position is moved down 1
 	plearner->agent_position[0] = plearner->ay;
-	cout << "moved down" << endl;
+	/*cout << "moved down" << endl;*/
 }
 
 
 void right(agent* plearner) {
 	plearner->ax = plearner->ax + 1;    																							  // agent's x position is moved right 1
 	plearner->agent_position[1] = plearner->ax;
-	cout << "moved right" << endl;
+	/*cout << "moved right" << endl;*/
 }
 
 void left(agent* plearner) {
 	plearner->ax = plearner->ax - 1;    																							  // agent's x position is moved left 1
 	plearner->agent_position[1] = plearner->ax;
-	cout << "moved left" << endl;
+	/*cout << "moved left" << endl;*/
 }
 
 void movement(agent*plearner) {
 	if (plearner->skip_move == 0) {
 		if (plearner->direction == 0) {
 			up(plearner);
-			cout << "up" << endl;
+			/*cout << "up" << endl;*/
 		}
 		else if (plearner->direction == 1) {
 			down(plearner);
-			cout << "down" << endl;
+			/*cout << "down" << endl;*/
 		}
 		else if (plearner->direction == 2) {
 			left(plearner);
-			cout << "left" << endl;
+			/*cout << "left" << endl;*/
 		}
 		else if (plearner->direction == 3) {
 			right(plearner);
-			cout << "right" << endl;
+			/*cout << "right" << endl;*/
 		}
 	}
 }
 
-/////////////////////////////////////////////////
-///////////////// BUMP THINGS ///////////////////
-/////////////////////////////////////////////////
 
 
-
-//void bumper_down(agent* plearner, domain* pgrid, int input) { 																  // (-,0) & input = up
-//    if (plearner->ay == 0 && input == 0) {
-//   	 plearner->ay = plearner->ay + 1;
-//   	 plearner->agent_position[0] = plearner->ay;
-//   	 cout << "bumped down" << endl;
-//    }
-//}
-//
-//void bumper_up(agent* plearner, domain* pgrid, int input) { 																	  // (-,y) & input = down
-//    if (plearner->ay == pgrid->y - 1 && input == 1) {
-//   	 plearner->ay = plearner->ay - 1;
-//   	 plearner->agent_position[0] = plearner->ay;
-//   	 cout << "bumped up\n" << endl;
-//    }
-//}
-//
-//void bumper_left(agent* plearner, domain* pgrid, int input) { 																  // (x,-) & input = right
-//    if (plearner->ax == pgrid->x - 1 && input == 2) {
-//   	 plearner->ax = plearner->ax - 1;
-//   	 plearner->agent_position[1] = plearner->ax;
-//   	 cout << "bumped left\n" << endl;
-//    }
-//}
-//
-//void bumper_right(agent* plearner, domain* pgrid, int input) { 																  // (0,-) & input = left
-//    if (plearner->ax == 0 && input == 3) {
-//   	 plearner->ax = plearner->ax + 1;
-//   	 plearner->agent_position[1] = plearner->ax;
-//   	 cout << "bumped right\n" << endl;
-//    }
-//}
-//
-//// corner cases where agent can go out of bounds by going in two directions
-//
-//void bumper_top_left(agent* plearner, domain* pgrid, int input) {
-//    if (plearner->ax == 0 && plearner->ay == 0 && input == 3) { 																  // (0,0) & input = left
-//   	 plearner->ax = plearner->ax + 1;
-//   	 plearner->agent_position[1] = plearner->ax;
-//   	 cout << "bumped right\n" << endl;
-//    }
-//    if (plearner->ax == 0 && plearner->ay == 0 && input == 0) { 																  // (0,0) & input = up
-//   	 plearner->ay = plearner->ay + 1;
-//   	 plearner->agent_position[0] = plearner->ay;
-//   	 cout << "bumped down\n" << endl;
-//    }
-//}
-//
-//void bumper_top_right(agent* plearner, domain* pgrid, int input) {
-//    if (plearner->ax == pgrid->x - 1 && plearner->ay == 0 && input == 2) { 													  // (x,0) & input = right
-//   	 plearner->ax = plearner->ax - 1;
-//   	 plearner->agent_position[1] = plearner->ax;
-//   	 cout << "bumped left\n" << endl;
-//    }
-//    if (plearner->ax == pgrid->x - 1 && plearner->ay == 0 && input == 0) { 													  // (x,0) & input = up
-//   	 plearner->ay = plearner->ay + 1;
-//   	 plearner->agent_position[0] = plearner->ay;
-//   	 cout << "bumped down\n" << endl;
-//    }
-//}
-//
-//void bumper_bot_left(agent* plearner, domain* pgrid, int input) {
-//    if (plearner->ax == 0 && plearner->ay == pgrid->y - 1 && input == 3) { 													  // (0,y) & input = left
-//   	 plearner->ax = plearner->ax + 1;
-//   	 plearner->agent_position[1] = plearner->ax;
-//   	 cout << "bumped left\n" << endl;
-//    }
-//    if (plearner->ax == 0 && plearner->ay == pgrid->y - 1 && input == 1) { 													  // (0,y) & input = down
-//   	 plearner->ay = plearner->ay - 1;
-//   	 plearner->agent_position[0] = plearner->ay;
-//   	 cout << "bumped up\n" << endl;
-//    }
-//}
-//
-//void bumper_bot_right(agent* plearner, domain* pgrid, int input) {
-//    if (plearner->ax == pgrid->x - 1 && plearner->ay == pgrid->y - 1 && input == 2) { 										  // (x,y) & input = right
-//   	 plearner->ax = plearner->ax - 1;
-//   	 plearner->agent_position[1] = plearner->ax;
-//   	 cout << "bumped left\n" << endl;
-//    }
-//    if (plearner->ax == pgrid->x - 1 && plearner->ay == pgrid->y - 1 && input == 1) { 										  // (x,y) & input = down
-//   	 plearner->ay = plearner->ay - 1;
-//   	 plearner->agent_position[0] = plearner->ay;
-//   	 cout << "bumped up\n" << endl;
-//    }
-//}
-
-
-void bumper(agent* plearner, domain* pgrid) {
+int bumper(agent* plearner, domain* pgrid) {
 	plearner->skip_move = 0;
+	int cornered = 0;
 	if (plearner->ay == 0) {
 		if (plearner->direction == 0) {
 			plearner->skip_move = 1;
-			cout << "bumped down" << endl;
+			/*cout << "bumped down" << endl;*/
 		}
 	}
 	if (plearner->ay == pgrid->y - 1) {
 		if (plearner->direction == 1) {
 			plearner->skip_move = 1;
-			cout << "bumped up" << endl;
+			/*cout << "bumped up" << endl;*/
 		}
 	}
 	if (plearner->ax == 0) {
 		if (plearner->direction == 2) {
 			plearner->skip_move = 1;
-			cout << "bumped right" << endl;
+			/*cout << "bumped right" << endl;*/
 		}
 	}
 	if (plearner->ax == pgrid->x - 1) {
 		if (plearner->direction == 3) {
 			plearner->skip_move = 1;
-			cout << "corner bump" << endl;
+			/*cout << "bumped left" << endl;*/
 		}
 	}
+	// corner cases
 	if (plearner->ay == 0 && plearner->ax == 0) {
 		if (plearner->direction == 0 || plearner->direction == 2) {
 			plearner->skip_move = 1;
-			cout << "corner bump" << endl;
+			/*cout << "top left corner" << endl;*/
+			cornered++;
 		}
 	}
 	if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) { //must subtract 1 since matrix starts at 0
 		if (plearner->direction == 1 || plearner->direction == 2) {
 			plearner->skip_move = 1;
-			cout << "corner bump" << endl;
+			/*cout << "top right corner" << endl;*/
+			cornered++;
 		}
 	}
 	if (plearner->ay == 0 && plearner->ax == pgrid->x - 1) {
 		if (plearner->direction == 0 || plearner->direction == 3) {
 			plearner->skip_move = 1;
-			cout << "corner bump" << endl;
+			/*cout << "bottom left corner" << endl;*/
+			cornered++;
 		}
 	}
 	if (plearner->ay == pgrid->y - 1 && plearner->ax == pgrid->x - 1) {
 		if (plearner->direction == 1 || plearner->direction == 3) {
 			plearner->skip_move = 1;
-			cout << "corner bump" << endl;
+			/*cout << "bottom right corner" << endl;*/
+			cornered++;
 		}
 	}
+	return cornered;
 }
 
 
@@ -429,185 +345,37 @@ void testA(agent* plearner, domain* pgrid) {
 
 
 /////////////////////////////////////////////////
-//////// HUMAN CONTROLLED NAVIGATION ////////////
-/////////////////////////////////////////////////
-
-
-
-//void testB(agent* plearner, domain*pgrid) {
-//    cout << "Coordinates start from 1,1 at top left corner. \nThe AGENT is represented by a 9. \nThe GOAL is represented by a 5. \nAn empty space is represented by a 1. \n" << endl;
-//    pgrid->show(plearner);
-//    int check = 1;
-//    while (check < 50) {
-//   	 int user_input;
-//   	 cout << "check = " << check << endl;
-//   	 cout << "Move the agent (9) around. 1 to move up, 2 to move down, 3 to move right, 4 to move left!\n" << endl;
-//   	 cin >> user_input;
-//   	 if (user_input == 1) {  																									  // up
-//   		 bumper_down(plearner, pgrid, user_input);
-//   		 bumper_top_left(plearner, pgrid, user_input);
-//   		 bumper_top_right(plearner, pgrid, user_input);
-//   		 up(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   	 }
-//   	 if (user_input == 2) {  																									  // down
-//   		 bumper_up(plearner, pgrid, user_input);
-//   		 bumper_bot_left(plearner, pgrid, user_input);
-//   		 bumper_bot_right(plearner, pgrid, user_input);
-//   		 down(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   	 }
-//   	 if (user_input == 3) {  																									  // right
-//   		 bumper_left(plearner, pgrid, user_input);
-//   		 bumper_top_right(plearner, pgrid, user_input);
-//   		 bumper_bot_right(plearner, pgrid, user_input);
-//   		 right(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   	 }
-//   	 if (user_input == 4) {  																									  // left
-//   		 bumper_right(plearner, pgrid, user_input);
-//   		 bumper_top_left(plearner, pgrid, user_input);
-//   		 bumper_bot_left(plearner, pgrid, user_input);
-//   		 left(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   	 }
-//   	 if (plearner->ax == pgrid->goal_x && plearner->ay == pgrid->goal_y) {  													  // ends the while loop
-//   		 check = 100;
-//   		 cout << "Goal reached! Program ending.\n" << endl;
-//   	 }
-//
-//    }
-//
-//}
-
-
-
-/////////////////////////////////////////////////
-///////////// HARD CODED NAVIGATION /////////////
-/////////////////////////////////////////////////
-
-
-
-//void testC(agent* plearner, domain* pgrid) {
-//    // if agent x > goal x, agent x - 1 (LEFT)
-//    // if agent y > goal y, agent y - 1 (UP)
-//    // if agent x < goal x, agent x + 1 (RIGHT)
-//    // if agent y < goal y, agent y + 1 (DOWN)
-//    cout << "Coordinates start from 1,1 at top left corner. \nThe AGENT is represented by a 9. \nThe GOAL is represented by a 5. \nAn empty space is represented by a 1. \n" << endl;
-//    cout << "Heuristic control!" << endl;
-//    int user_input = 0;
-//    int check = 10;
-//    while (check < 50) {
-//   	 if (plearner->ax > pgrid->goal_x) { 																						  // move left
-//   		 user_input = 4;
-//   		 bumper_right(plearner, pgrid, user_input);  																			  // technically, the heuristic control should never need bumpers
-//   		 bumper_top_left(plearner, pgrid, user_input);
-//   		 bumper_bot_left(plearner, pgrid, user_input);
-//   		 left(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   		 cout << "Press any number to continue movement" << endl;
-//   		 int input;
-//   		 cin >> input;
-//   	 }
-//   	 else if (plearner->ax < pgrid->goal_x) { 																					  // move right
-//   		 user_input = 3;
-//   		 bumper_left(plearner, pgrid, user_input);
-//   		 bumper_top_right(plearner, pgrid, user_input);
-//   		 bumper_bot_right(plearner, pgrid, user_input);
-//   		 right(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   		 cout << "Press any number to continue movement" << endl;
-//   		 int input;
-//   		 cin >> input;
-//   	 }
-//   	 else if (plearner->ay < pgrid->goal_y) { 																					  // move down
-//   		 user_input = 2;
-//   		 bumper_up(plearner, pgrid, user_input);
-//   		 bumper_bot_left(plearner, pgrid, user_input);
-//   		 bumper_bot_right(plearner, pgrid, user_input);
-//   		 down(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   		 cout << "Press any number to continue movement" << endl;
-//   		 int input;
-//   		 cin >> input;
-//   	 }
-//   	 else if (plearner->ay > pgrid->goal_y) { 																					  // move up
-//   		 user_input = 1;
-//   		 bumper_down(plearner, pgrid, user_input);
-//   		 bumper_top_left(plearner, pgrid, user_input);
-//   		 bumper_top_right(plearner, pgrid, user_input);
-//   		 up(plearner);
-//   		 pgrid->write();
-//   		 pgrid->goal(pgrid);
-//   		 pgrid->position(pgrid, plearner);
-//   		 pgrid->show(plearner);
-//   		 cout << "Press any number to continue movement" << endl;
-//   		 int input;
-//   		 cin >> input;
-//   	 }
-//   	 else if (plearner->ax == pgrid->goal_x && plearner->ay == pgrid->goal_y) {  												  // end while loop
-//   		 check = 100;
-//   	 }
-//   	 else {
-//   		 cout << "Press any number to continue movement" << endl;  															  // user makes next step happen, but movement is still "autonomous"
-//   		 int input;
-//   		 cin >> input;
-//   	 }
-//    }
-//}
-
-/////////////////////////////////////////////////
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
 int decide(agent* plearner) {
 	int action;
 	double decision = ATRAND;
-	if (1 - plearner->epsilon <= decision) {  																						  // compares if epsilon is less than or equal to a random number
-		action = 1;  																													  // random action
+	if (1 - plearner->epsilon <= decision) {  																						 // compares if epsilon is less than or equal to a random number
+		action = 1;  																												 // random action
 	}
 	else {
-		action = 2;  																													  // greedy action
+		action = 2;  																												 // greedy action
 	}
 	return action;
 }
 
-double act1(agent* plearner, domain* pgrid) {  																									  // random action
+double act1(agent* plearner, domain* pgrid) {  																					 // random action
+																																 /*cout << "random" << endl;*/
 	plearner->direction = rand() % 4;
-	if (plearner->direction == 0) {
+	if (plearner->direction == 0) {   																								 // random up
 		bumper(plearner, pgrid);
 		movement(plearner);
 	}
-	if (plearner->direction == 1) {
+	if (plearner->direction == 1) {   																								 // random down
 		bumper(plearner, pgrid);
 		movement(plearner);
 	}
-	if (plearner->direction == 2) {
+	if (plearner->direction == 2) {   																								 // random left
 		bumper(plearner, pgrid);
 		movement(plearner);
 	}
-	if (plearner->direction == 3) {
+	if (plearner->direction == 3) {   																								 // random right
 		bumper(plearner, pgrid);
 		movement(plearner);
 	}
@@ -615,24 +383,27 @@ double act1(agent* plearner, domain* pgrid) {  																									  // ran
 	return plearner->direction;
 }
 
-double act2(agent* plearner, domain* pgrid) {  																									  // greedy action
+double act2(agent* plearner, domain* pgrid) {  																					 // greedy action
+																																 /*cout << "greedy" << endl;*/
 	double Q_up;
 	double Q_down;
 	double Q_right;
 	double Q_left;
 	int state_current;
-	state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
-	Q_up = pgrid->qtable[state_current][0];
-	Q_down = pgrid->qtable[state_current][1];
-	Q_right = pgrid->qtable[state_current][2];
-	Q_left = pgrid->qtable[state_current][3];
+	state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);   					 // checks the state vector based on state matrix coords
+	Q_up = pgrid->qtable[state_current][0];   														 // Q for up at current
+	Q_down = pgrid->qtable[state_current][1];   													 // Q for down at current
+	Q_right = pgrid->qtable[state_current][2];   													 // Q for left at current
+	Q_left = pgrid->qtable[state_current][3];   													 // Q for right at current
 	double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-	double max = 0;   																																		 // find max q of current state
-	for (int i = 0; i < 4; i++) {
-		if (findmax[i] > max) {
-			max = findmax[i];
-		}
-	}
+	//double max = 0;   																																		 // find max q of current state
+	//for (int i = 0; i < 4; i++) {
+	//	if (findmax[i] > max) {
+	//		max = findmax[i];
+	//	}
+	//}
+	double max;
+	max = *max_element(findmax, findmax + 4);
 	if (max == Q_up) {
 		plearner->direction = 0;
 	}
@@ -671,110 +442,155 @@ int current_state(agent* plearner, domain* pgrid) {
 }
 
 // 0 1 2 3
-// u d r l
+// u d l r
 
 double react(agent* plearner, domain* pgrid, int input, int prev_state) {
-	int reward;
+	double reward;
 	double old_q;
 	double curr_q;
 	reward = pgrid->rewards.at(pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]));
-	cout << "reward is " << reward << endl;
-	if (input == 0) {
+	if (input == 0) {																																			// agent reacts to moving up
+		int state_current;
+		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
+		if (state_current == prev_state) {
+			reward = -1;
+		}
+		if (plearner->ay == 0 && plearner->ax == 0) {
+			reward = -2;
+		}
+		if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) {
+			reward = -2;
+		}
 		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
 		double Q_up;
 		double Q_down;
 		double Q_right;
 		double Q_left;
-		int state_current;
-		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
-		cout << "state is " << state_current << endl;
+		
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
-		Q_right = pgrid->qtable[state_current][2];
-		Q_left = pgrid->qtable[state_current][3];
+		Q_right = pgrid->qtable[state_current][3];
+		Q_left = pgrid->qtable[state_current][2];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		for (int i = 0; i < 4; i++) {
+		/*for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}
-		int update_q;
-		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
-		pgrid->qtable[prev_state][input] = update_q;
+		}*/
+		max = *max_element(findmax, findmax + 4);
+		double update_q;
+		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);																		// new q value
+		pgrid->qtable[prev_state][input] = update_q;																										// puts new q value to old action
+
 	}
 	if (input == 1) {
+		int state_current;
+		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
+		if (state_current == prev_state) {
+			reward = -1;
+		}
+		if (plearner->ay == 0 && plearner->ax == pgrid->x - 1) {
+			reward = -2;
+		}
+		if (plearner->ay == pgrid->y - 1 && plearner->ax == pgrid->x - 1) {
+			reward = -2;
+		}
 		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
 		double Q_up;
 		double Q_down;
 		double Q_right;
 		double Q_left;
-		int state_current;
-		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
-		cout << "state is " << state_current << endl;
+		
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
-		Q_right = pgrid->qtable[state_current][2];
-		Q_left = pgrid->qtable[state_current][3];
+		Q_right = pgrid->qtable[state_current][3];
+		Q_left = pgrid->qtable[state_current][2];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		for (int i = 0; i < 4; i++) {
+		/*for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}
-		int update_q;
+		}*/
+		max = *max_element(findmax, findmax + 4);
+		double update_q;
 		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
+
 	}
 	if (input == 3) {
+		int state_current;
+		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
+		if (state_current == prev_state) {
+			reward = -1;
+		}
+		if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) {
+			reward = -2;
+		}
 		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
 		double Q_up;
 		double Q_down;
 		double Q_right;
 		double Q_left;
-		int state_current;
-		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
-		cout << "state is " << state_current << endl;
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
-		Q_right = pgrid->qtable[state_current][2];
-		Q_left = pgrid->qtable[state_current][3];
+		Q_right = pgrid->qtable[state_current][3];
+		Q_left = pgrid->qtable[state_current][2];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		for (int i = 0; i < 4; i++) {
+		/*for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}
-		int update_q;
-		update_q = old_q + plearner->alpha * (reward + (plearner->gamma * max) - old_q);
+		}*/
+		max = *max_element(findmax, findmax + 4);
+		double update_q;
+		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
+
 	}
 	if (input == 2) {
+		int state_current;
+		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
+		if (state_current == prev_state) {
+			reward = -1;
+		}
+		if (plearner->ay == 0 && plearner->ax == 0) {
+			reward = -2;
+		}
+		if (plearner->ay == 0 && plearner->ax == pgrid->x - 1) {
+			reward = -2;
+		}
 		old_q = pgrid->qtable[prev_state][input];
 		double Q_up;
 		double Q_down;
 		double Q_right;
 		double Q_left;
-		int state_current;
-		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
-		cout << "state is " << state_current << endl;
+		
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
-		Q_right = pgrid->qtable[state_current][2];
-		Q_left = pgrid->qtable[state_current][3];
+		Q_right = pgrid->qtable[state_current][3];
+		Q_left = pgrid->qtable[state_current][2];
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		for (int i = 0; i < 4; i++) {
+		/*for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}
-		int update_q;
+		}*/
+		max = *max_element(findmax, findmax + 4);
+		double update_q;
 		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
+
 	}
+	/*cout << "old state " << prev_state << "\n" << "new state " << state_current << endl;
+	cout << "max is " << max << endl;
+	cout << "old q is " << old_q << endl;
+	cout << "current state is " << state_current << endl;
+	cout << "new q is " << update_q << endl;
+	cout << "reward is " << reward << endl;*/
 	return 0;
 }
 
@@ -787,35 +603,67 @@ int main()
 	agent* plearner = &learner;
 	domain grid;
 	grid.init();
-	// prevents randomized goal coordinates from being placed on the agent
-	while (learner.ax == grid.goal_x && learner.ay == grid.goal_y) {
-		cout << "Goal coordinates were placed on agent position, please re-enter X and Y\n" << endl;
-		grid.init();
-	}
+
 	domain* pgrid = &grid;
-	grid.goal(pgrid); 																											  // establishes goal
-	grid.position(pgrid, plearner); 																								  // positions the learner
+	grid.goal(pgrid); 																												 // establishes goal
+	grid.position(pgrid, plearner); 																								 // positions the learner
 	grid.show(plearner);
 	cout << "\n" << endl;
 	grid.fillq(plearner);
+
 	int input = 99;
-	int lul;
 	int prev_state;
-	for (int i = 0; i < 250;) {
-		prev_state = current_state(plearner, pgrid);
-		int action = decide(plearner);
-		if (action == 1) {
-			input = act1(plearner, pgrid);
+	int check = 10;
+	int steps = 0;
+	int lul;
+	int greedy = 0;
+	int random = 0;
+	int iterations = 5;
+	vector<int> stepvector;
+
+	for (int i = 0; i < iterations; i++) {
+		check = 10;
+		while (check < 100) {
+			prev_state = current_state(plearner, pgrid);
+			int action = decide(plearner);
+			if (action == 1) {
+				input = act1(plearner, pgrid);
+				steps++;
+				random++;
+			}
+			if (action == 2) {
+				input = act2(plearner, pgrid);
+				steps++;
+				greedy++;
+			}
+			react(plearner, pgrid, input, prev_state);
+			/*pgrid->displayq();
+			pgrid->express(plearner);*/
+			if (learner.ax == grid.goal_x && learner.ay == grid.goal_y) {
+				check = 200;
+				cout << "steps = " << steps << endl;
+				cout << "goal reached" << endl;
+				cout << "random is " << random << endl;
+				cout << "greedy is " << greedy << endl;
+				stepvector.push_back(steps);
+				steps = 0;
+				random = 0;
+				greedy = 0;
+				learner.ax = 0;
+				learner.ay = 0;
+				grid.displayq();
+				cin >> lul;
+			}
 		}
-		if (action == 2) {
-			input = act2(plearner, pgrid);
-		}
-		react(plearner, pgrid, input, prev_state);
-		pgrid->displayq();
-		pgrid->express(plearner);
-		cin >> lul;
-		i++;
 	}
+	
+	ofstream outFile;   																									 // output file
+	outFile.open("Ta_Alton_493_ProjectBeta.txt");   																		 // name of output file
+	for (int w = 0; w < iterations; w++) {
+		outFile << w << "\t" << stepvector.at(w) << endl;   	 // outputs pull # and it's corresponding reward to a text file, action curves   	 
+	}
+	outFile.close();
+
 	/*pgrid->express(plearner);*/
 	cout << "You found Waldo! \n" << endl;
 	return 0;
