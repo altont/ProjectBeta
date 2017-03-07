@@ -90,8 +90,8 @@ void domain::init() {
 	cout << "Please choose how many columns \n y = " << endl;
 	cin >> y; 																											  // user input for columns
 	matrix.resize(x);  																									  // creates x columns (i think)
-	goal_x = x - 1;  																										  // goal placed at a random X coordinate
-	goal_y = y - 1;  																										  // goal placed at a random Y coordinate
+	goal_x = x - 1;  																										  // goal placed at a X coordinate
+	goal_y = y - 1;  																										  // goal placed at a Y coordinate
 	for (int i = 0; i < x; i++) {
 		matrix[i].resize(y);  																							  // creates y rows (i think)
 
@@ -112,9 +112,9 @@ void domain::init() {
 		}
 	}
 	for (int i = 0; i < rewards.size(); i++) {
-		rewards.at(i) = -0.99;  																								  // all rewards = -1
+		rewards.at(i) = -0.99;  																								  // all rewards = -0.99
 	}
-	rewards.at(state.at(matrix[goal_x][goal_y])) = goal_reward;  																	  // goal reward = 100
+	rewards.at(state.at(matrix[goal_x][goal_y])) = goal_reward;  																	  // goal reward
 	cout << endl;
 
 }
@@ -132,7 +132,6 @@ void domain::write() {
 }
 
 void domain::show(agent* plearner) {
-	cout << "ecks dee" << endl;
 	for (int o = 0; o < x; o++) {
 		for (int p = 0; p < y; p++) {
 			cout << matrix[o][p] << "\t"; 																						  // show matrix
@@ -253,38 +252,39 @@ void movement(agent*plearner) {
 
 void bumper(agent* plearner, domain* pgrid) {
 	plearner->skip_move = 0;
+																																							// edge cases
 	if (plearner->ay == 0) {
-		if (plearner->direction == 0) {
+		if (plearner->direction == 0) {																														// at top, trying to move up
 			plearner->skip_move = 1;
 			/*cout << "bumped down" << endl;*/
 		}
 	}
-	if (plearner->ay == pgrid->y - 1) {
+	if (plearner->ay == pgrid->y - 1) {																														// at bottom, trying to move down
 		if (plearner->direction == 1) {
 			plearner->skip_move = 1;
 			/*cout << "bumped up" << endl;*/
 		}
 	}
-	if (plearner->ax == 0) {
+	if (plearner->ax == 0) {																																// at left edge, trying to move left
 		if (plearner->direction == 2) {
 			plearner->skip_move = 1;
 			/*cout << "bumped right" << endl;*/
 		}
 	}
-	if (plearner->ax == pgrid->x - 1) {
+	if (plearner->ax == pgrid->x - 1) {																														// at right edge, trying to move right
 		if (plearner->direction == 3) {
 			plearner->skip_move = 1;
 			/*cout << "bumped left" << endl;*/
 		}
 	}
-	// corner cases
+																																							// corner cases
 	if (plearner->ay == 0 && plearner->ax == 0) {
 		if (plearner->direction == 0 || plearner->direction == 2) {
 			plearner->skip_move = 1;
 			/*cout << "top left corner" << endl;*/
 		}
 	}
-	if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) { //must subtract 1 since matrix starts at 0
+	if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) { 
 		if (plearner->direction == 1 || plearner->direction == 2) {
 			plearner->skip_move = 1;
 			/*cout << "bottom left corner" << endl;*/
@@ -399,6 +399,7 @@ double act2(agent* plearner, domain* pgrid) {  																					 // greedy a
 			max = findmax[i];
 		}
 	}
+	// taken from http://www.cplusplus.com/forum/general/51452/
 	/*cout << "greedy max = " << max << endl;*/
 	if (max == Q_up) {
 		plearner->direction = 0;
@@ -433,7 +434,7 @@ double act2(agent* plearner, domain* pgrid) {  																					 // greedy a
 
 int current_state(agent* plearner, domain* pgrid) {
 	int state_current;
-	state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
+	state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);																				// record state that learner is in
 	return state_current;
 }
 
@@ -443,28 +444,27 @@ int current_state(agent* plearner, domain* pgrid) {
 double react(agent* plearner, domain* pgrid, int input, int prev_state) {
 	int reward;
 	double old_q;
-	double curr_q;
-	reward = pgrid->rewards.at(pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]));
+	double curr_q;																																			
+	reward = pgrid->rewards.at(pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]));																	// reward from movement
 	if (input == 0) {
 		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
-																																							 /*cout << "old q is " << old_q << endl;*/
 		double Q_up;
 		double Q_down;
 		double Q_right;
 		double Q_left;
 		int state_current;
-		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
-		if (state_current == prev_state) {
+		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);																			// post movement state
+		if (state_current == prev_state) {																													// if a bumper is hit, reward = -1
 			reward = -1;
 		}
 		/*cout << "state is " << state_current << endl;*/
-		Q_up = pgrid->qtable[state_current][0];
+		Q_up = pgrid->qtable[state_current][0];																												// post movement Q values
 		Q_down = pgrid->qtable[state_current][1];
 		Q_right = pgrid->qtable[state_current][3];
 		Q_left = pgrid->qtable[state_current][2];
 		/*cout << "max q's " << Q_up << " " << Q_down << " " << Q_left << " " << Q_right << endl;*/
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-		double max = 0;   																																	 // current q max
+		double max = 0;   																																	 // post movement q max
 		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
@@ -472,10 +472,11 @@ double react(agent* plearner, domain* pgrid, int input, int prev_state) {
 		}
 		/*cout << "max is " << max << endl;*/
 		double update_q;
-		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
-		pgrid->qtable[prev_state][input] = update_q;
+		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);																		// new q value for prev. movement
+		pgrid->qtable[prev_state][input] = update_q;																										// places new q value for that state,action
 		/*cout << "new q is " << update_q << "for state, action " << prev_state << " " << input << endl;*/
 	}
+																																							// repeat for other movements
 	if (input == 1) {
 		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
 																																							 /*cout << "old q is " << old_q << endl;*/
@@ -589,71 +590,63 @@ int main()
 	cout << "\n" << endl;
 	grid.fillq(plearner);
 
-	int input = 99;
+	int input = 99;																													// place holder
 	int prev_state;
-	int check = 10;
-	int steps = 0;
-	int lul;
-	int greedy = 0;
-	int random = 0;
-	int iterations = 1000;
-	vector<int> stepvector;
-	int st = grid.x * grid.y;
-	double edc = -0.000001;
+	int check = 10;																													// place holder
+	double steps = 0;
+	int greedy = 0;																													// greedy action counter
+	int random = 0;																													// random action counter
+	int iterations = 1000;																											// one run = X amount of iterations
+	vector<int> stepvector;																											// count steps
+	int st = grid.x * grid.y;																										// to be used for test F
+	double edc = -0.00000001;																											// decay constant for epsilon
 
 	for (int i = 0; i < iterations; i++) {
 		check = 10;
-		while (check < 100) {
-			prev_state = current_state(plearner, pgrid);
+		while (check < 100) {																										// while loop will stop when agent reaches goal
+			prev_state = current_state(plearner, pgrid);																			// state before movement
 			/*cout << "prev state is " << prev_state << endl;*/
-			int action = decide(plearner);
-			if (action == 1) {
-				input = act1(plearner, pgrid);
-				steps++;
-				random++;
+			int action = decide(plearner);																							// decide what to do
+			if (action == 1) {																										// will do random action
+				input = act1(plearner, pgrid);																						// random action
+				steps++;																											// increase step count
+				random++;																											// increase random count
 			}
 			if (action == 2) {
-				input = act2(plearner, pgrid);
-				steps++;
-				greedy++;
+				input = act2(plearner, pgrid);																						// greedy action
+				steps++;																											// increase step count
+				greedy++;																											// increase random count
 			}
-			react(plearner, pgrid, input, prev_state);
-			/*pgrid->displayq();*/
-			/*pgrid->express(plearner);*/
-			/*cin >> lul;*/
-			if (learner.ax == grid.goal_x && learner.ay == grid.goal_y) {
-				check = 200;
-				/*cout << "steps = " << steps << endl;
-				cout << "goal reached" << endl;
-				cout << "random is " << random << endl;
-				cout << "greedy is " << greedy << endl;*/
-				stepvector.push_back(steps);
+			react(plearner, pgrid, input, prev_state);																				// will update q value
+			// TEST D
+			if (learner.ax == grid.goal_x && learner.ay == grid.goal_y) {															// checks if agent is at goal
+				check = 200;																										// end while loop
+				// TEST F
+				if (steps < (grid.x + grid.y) - 2) {
+					assert(1 == 9);
+				}
+				stepvector.push_back(steps);																						// add entry to step vector
 				// TEST E
 				steps = 0;
-				/*random = 0;
-				greedy = 0;*/
 				learner.ax = 0;
 				learner.ay = 0;
-				learner.epsilon = learner.epsilon * pow(2.7181818, edc*i);
-				// TEST D
+				learner.epsilon = learner.epsilon * pow(2.7181818, edc*i);															// decay epsilon upon iteration ending
 				for (int i = 0; i < st; i++) {
 					for (int j = 0; j < 4; j++) {
-						if (grid.qtable[i][j] > grid.goal_reward + 0.001) {
-							cout << grid.qtable[i][j] << endl;
+						if (grid.qtable[i][j] > grid.goal_reward + 0.001) {															// end program if goal reward is exceeded
+							cout << grid.qtable[i][j] << endl;																		// +0.001 due to glitches?
 							assert(1 == 9);
 						}
 					}
 				}
-				/*cin >> lul;*/
 			}
 		}
 	}
 	grid.displayq();
-	/*cout << "greedy actions " << greedy << "\nrandom actions " << random << endl;*/
 	ofstream outFile;   																									 // output file
 	outFile.open("Ta_Alton_493_ProjectBeta.txt");   																		 // name of output file
 	for (int w = 0; w < iterations; w++) {
-		outFile << w << "\t" << stepvector.at(w) << endl;   	 // outputs pull # and it's corresponding reward to a text file, action curves   	 
+		outFile << w << "\t" << stepvector.at(w) << endl;   																// outputs episodes/iterations and its corresponding steps to a text file  	 
 	}
 	outFile.close();
 	cout << "Snake has escaped from New York! \n" << endl;
