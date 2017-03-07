@@ -1,4 +1,4 @@
-// HW2.cpp : Defines the entry point for the console application.
+// Ta_Alton_ME493_ProjectBeta.cpp : Defines the entry point for the console application.
 //
 
 #include "stdafx.h"
@@ -10,6 +10,7 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <assert.h>
 #include <algorithm>
 #include <fstream>
 #include <cstdlib>
@@ -47,8 +48,8 @@ public:
 void agent::init() {
 	ax = 0;  																														  // places learner at (0,0)
 	ay = 0;
-	epsilon = 0.2;
-	alpha = 0.2;
+	epsilon = 0.3;
+	alpha = 0.1;
 	gamma = 0.9;
 	agent_position[1] = ax;  																										  // stores agent's x coord in 2nd data entry
 	agent_position[0] = ay;  																										  // stores agent's y coord in 1st data entry
@@ -80,6 +81,7 @@ public:
 	void fillq(agent* plearner);
 	void express(agent* plearner);
 	void displayq();
+	int goal_reward = 100;
 };
 
 void domain::init() {
@@ -94,10 +96,10 @@ void domain::init() {
 		matrix[i].resize(y);  																							  // creates y rows (i think)
 
 	}
-	for (int t = 0; t < x; t++) {  																						  // creates state vector
+	for (int t = 0; t < x; t++) {  																					 // creates state vector
 		for (int j = 0; j < y; j++) {
 			matrix[t][j] = j + (t*y);
-			state.push_back(matrix[t][j]);
+			state.push_back(matrix[t][j]);   																			  // fills state 0 to x*y-1
 		}
 	}
 	for (int i = 0; i < state.size(); i++) {
@@ -110,9 +112,9 @@ void domain::init() {
 		}
 	}
 	for (int i = 0; i < rewards.size(); i++) {
-		rewards.at(i) = -1;  																								  // all rewards = -1
+		rewards.at(i) = -0.99;  																								  // all rewards = -1
 	}
-	rewards.at(state.at(matrix[goal_x][goal_y])) = 100;  																	  // goal reward = 100
+	rewards.at(state.at(matrix[goal_x][goal_y])) = goal_reward;  																	  // goal reward = 100
 	cout << endl;
 
 }
@@ -130,6 +132,7 @@ void domain::write() {
 }
 
 void domain::show(agent* plearner) {
+	cout << "ecks dee" << endl;
 	for (int o = 0; o < x; o++) {
 		for (int p = 0; p < y; p++) {
 			cout << matrix[o][p] << "\t"; 																						  // show matrix
@@ -173,7 +176,7 @@ void domain::fillq(agent* plearner) {
 	cout << "filled table" << endl;
 	for (int o = 0; o < st; o++) {
 		for (int p = 0; p < 4; p++) {
-			cout << qtable[o][p] << "\t \t"; 																						  // show q table
+			cout << qtable[o][p] << "\t"; 																						  // show q table
 		}
 		cout << endl;
 	}
@@ -187,7 +190,7 @@ void domain::displayq() {
 	int st = x*y;
 	for (int o = 0; o < st; o++) {
 		for (int p = 0; p < 4; p++) {
-			cout << qtable[o][p] << "\t "; 																						  // show q table
+			cout << qtable[o][p] << "\t 	\t"; 																						  // show q table
 		}
 		cout << endl;
 	}
@@ -248,9 +251,8 @@ void movement(agent*plearner) {
 
 
 
-int bumper(agent* plearner, domain* pgrid) {
+void bumper(agent* plearner, domain* pgrid) {
 	plearner->skip_move = 0;
-	int cornered = 0;
 	if (plearner->ay == 0) {
 		if (plearner->direction == 0) {
 			plearner->skip_move = 1;
@@ -280,31 +282,26 @@ int bumper(agent* plearner, domain* pgrid) {
 		if (plearner->direction == 0 || plearner->direction == 2) {
 			plearner->skip_move = 1;
 			/*cout << "top left corner" << endl;*/
-			cornered++;
 		}
 	}
 	if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) { //must subtract 1 since matrix starts at 0
 		if (plearner->direction == 1 || plearner->direction == 2) {
 			plearner->skip_move = 1;
-			/*cout << "top right corner" << endl;*/
-			cornered++;
+			/*cout << "bottom left corner" << endl;*/
 		}
 	}
 	if (plearner->ay == 0 && plearner->ax == pgrid->x - 1) {
 		if (plearner->direction == 0 || plearner->direction == 3) {
 			plearner->skip_move = 1;
-			/*cout << "bottom left corner" << endl;*/
-			cornered++;
+			/*cout << "top right corner" << endl;*/
 		}
 	}
 	if (plearner->ay == pgrid->y - 1 && plearner->ax == pgrid->x - 1) {
 		if (plearner->direction == 1 || plearner->direction == 3) {
 			plearner->skip_move = 1;
 			/*cout << "bottom right corner" << endl;*/
-			cornered++;
 		}
 	}
-	return cornered;
 }
 
 
@@ -393,17 +390,16 @@ double act2(agent* plearner, domain* pgrid) {  																					 // greedy a
 	state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);   					 // checks the state vector based on state matrix coords
 	Q_up = pgrid->qtable[state_current][0];   														 // Q for up at current
 	Q_down = pgrid->qtable[state_current][1];   													 // Q for down at current
-	Q_right = pgrid->qtable[state_current][2];   													 // Q for left at current
-	Q_left = pgrid->qtable[state_current][3];   													 // Q for right at current
+	Q_right = pgrid->qtable[state_current][3];   													 // Q for left at current
+	Q_left = pgrid->qtable[state_current][2];   													 // Q for right at current
 	double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
-	//double max = 0;   																																		 // find max q of current state
-	//for (int i = 0; i < 4; i++) {
-	//	if (findmax[i] > max) {
-	//		max = findmax[i];
-	//	}
-	//}
-	double max;
-	max = *max_element(findmax, findmax + 4);
+	double max = 0;   																																		 // find max q of current state
+	for (int i = 0; i < 5; i++) {
+		if (findmax[i] > max) {
+			max = findmax[i];
+		}
+	}
+	/*cout << "greedy max = " << max << endl;*/
 	if (max == Q_up) {
 		plearner->direction = 0;
 	}
@@ -445,152 +441,134 @@ int current_state(agent* plearner, domain* pgrid) {
 // u d l r
 
 double react(agent* plearner, domain* pgrid, int input, int prev_state) {
-	double reward;
+	int reward;
 	double old_q;
 	double curr_q;
 	reward = pgrid->rewards.at(pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]));
-	if (input == 0) {																																			// agent reacts to moving up
+	if (input == 0) {
+		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
+																																							 /*cout << "old q is " << old_q << endl;*/
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		if (state_current == prev_state) {
 			reward = -1;
 		}
-		if (plearner->ay == 0 && plearner->ax == 0) {
-			reward = -2;
-		}
-		if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) {
-			reward = -2;
-		}
-		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
-		double Q_up;
-		double Q_down;
-		double Q_right;
-		double Q_left;
-		
+		/*cout << "state is " << state_current << endl;*/
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
 		Q_right = pgrid->qtable[state_current][3];
 		Q_left = pgrid->qtable[state_current][2];
+		/*cout << "max q's " << Q_up << " " << Q_down << " " << Q_left << " " << Q_right << endl;*/
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		/*for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}*/
-		max = *max_element(findmax, findmax + 4);
+		}
+		/*cout << "max is " << max << endl;*/
 		double update_q;
-		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);																		// new q value
-		pgrid->qtable[prev_state][input] = update_q;																										// puts new q value to old action
-
+		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
+		pgrid->qtable[prev_state][input] = update_q;
+		/*cout << "new q is " << update_q << "for state, action " << prev_state << " " << input << endl;*/
 	}
 	if (input == 1) {
+		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
+																																							 /*cout << "old q is " << old_q << endl;*/
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		if (state_current == prev_state) {
 			reward = -1;
 		}
-		if (plearner->ay == 0 && plearner->ax == pgrid->x - 1) {
-			reward = -2;
-		}
-		if (plearner->ay == pgrid->y - 1 && plearner->ax == pgrid->x - 1) {
-			reward = -2;
-		}
-		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
-		double Q_up;
-		double Q_down;
-		double Q_right;
-		double Q_left;
-		
+		/*cout << "state is " << state_current << endl;*/
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
 		Q_right = pgrid->qtable[state_current][3];
 		Q_left = pgrid->qtable[state_current][2];
+		/*cout << "max q's " << Q_up << " " << Q_down << " " << Q_left << " " << Q_right << endl;*/
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		/*for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}*/
-		max = *max_element(findmax, findmax + 4);
+		}
+		/*cout << "max is " << max << endl;*/
 		double update_q;
 		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
-
+		/*cout << "new q is " << update_q << "for state, action " << prev_state << " " << input << endl;*/
 	}
 	if (input == 3) {
+		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
+																																							 /*cout << "old q is " << old_q << endl;*/
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		if (state_current == prev_state) {
 			reward = -1;
 		}
-		if (plearner->ay == pgrid->y - 1 && plearner->ax == 0) {
-			reward = -2;
-		}
-		old_q = pgrid->qtable[prev_state][input];   																										 // q from last state
-		double Q_up;
-		double Q_down;
-		double Q_right;
-		double Q_left;
+		/*cout << "state is " << state_current << endl;*/
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
 		Q_right = pgrid->qtable[state_current][3];
 		Q_left = pgrid->qtable[state_current][2];
+		/*cout << "max q's " << Q_up << " " << Q_down << " " << Q_left << " " << Q_right << endl;*/
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		/*for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}*/
-		max = *max_element(findmax, findmax + 4);
+		}
+		/*cout << "max is " << max << endl;*/
 		double update_q;
 		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
-
+		/*cout << "new q is " << update_q << "for state, action " << prev_state << " " << input << endl;*/
 	}
 	if (input == 2) {
+		old_q = pgrid->qtable[prev_state][input];
+		/*cout << "old q is " << old_q << endl;*/
+		double Q_up;
+		double Q_down;
+		double Q_right;
+		double Q_left;
 		int state_current;
 		state_current = pgrid->state.at(pgrid->matrix[plearner->ay][plearner->ax]);
 		if (state_current == prev_state) {
 			reward = -1;
 		}
-		if (plearner->ay == 0 && plearner->ax == 0) {
-			reward = -2;
-		}
-		if (plearner->ay == 0 && plearner->ax == pgrid->x - 1) {
-			reward = -2;
-		}
-		old_q = pgrid->qtable[prev_state][input];
-		double Q_up;
-		double Q_down;
-		double Q_right;
-		double Q_left;
-		
+		/*cout << "state is " << state_current << endl;*/
 		Q_up = pgrid->qtable[state_current][0];
 		Q_down = pgrid->qtable[state_current][1];
 		Q_right = pgrid->qtable[state_current][3];
 		Q_left = pgrid->qtable[state_current][2];
+		/*cout << "max q's " << Q_up << " " << Q_down << " " << Q_left << " " << Q_right << endl;*/
 		double findmax[4] = { Q_up, Q_down, Q_right, Q_left };
 		double max = 0;   																																	 // current q max
-		/*for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			if (findmax[i] > max) {
 				max = findmax[i];
 			}
-		}*/
-		max = *max_element(findmax, findmax + 4);
+		}
+		/*cout << "max is " << max << endl;*/
 		double update_q;
 		update_q = old_q + plearner->alpha*(reward + (plearner->gamma*max) - old_q);
 		pgrid->qtable[prev_state][input] = update_q;
-
+		/*cout << "new q is " << update_q << "for state, action " << prev_state << " " << input << endl;*/
 	}
-	/*cout << "old state " << prev_state << "\n" << "new state " << state_current << endl;
-	cout << "max is " << max << endl;
-	cout << "old q is " << old_q << endl;
-	cout << "current state is " << state_current << endl;
-	cout << "new q is " << update_q << endl;
-	cout << "reward is " << reward << endl;*/
 	return 0;
 }
 
@@ -618,13 +596,16 @@ int main()
 	int lul;
 	int greedy = 0;
 	int random = 0;
-	int iterations = 5;
+	int iterations = 1000;
 	vector<int> stepvector;
+	int st = grid.x * grid.y;
+	double edc = -0.000001;
 
 	for (int i = 0; i < iterations; i++) {
 		check = 10;
 		while (check < 100) {
 			prev_state = current_state(plearner, pgrid);
+			/*cout << "prev state is " << prev_state << endl;*/
 			int action = decide(plearner);
 			if (action == 1) {
 				input = act1(plearner, pgrid);
@@ -637,34 +618,44 @@ int main()
 				greedy++;
 			}
 			react(plearner, pgrid, input, prev_state);
-			/*pgrid->displayq();
-			pgrid->express(plearner);*/
+			/*pgrid->displayq();*/
+			/*pgrid->express(plearner);*/
+			/*cin >> lul;*/
 			if (learner.ax == grid.goal_x && learner.ay == grid.goal_y) {
 				check = 200;
-				cout << "steps = " << steps << endl;
+				/*cout << "steps = " << steps << endl;
 				cout << "goal reached" << endl;
 				cout << "random is " << random << endl;
-				cout << "greedy is " << greedy << endl;
+				cout << "greedy is " << greedy << endl;*/
 				stepvector.push_back(steps);
+				// TEST E
 				steps = 0;
-				random = 0;
-				greedy = 0;
+				/*random = 0;
+				greedy = 0;*/
 				learner.ax = 0;
 				learner.ay = 0;
-				grid.displayq();
-				cin >> lul;
+				learner.epsilon = learner.epsilon * pow(2.7181818, edc*i);
+				// TEST D
+				for (int i = 0; i < st; i++) {
+					for (int j = 0; j < 4; j++) {
+						if (grid.qtable[i][j] > grid.goal_reward + 0.001) {
+							cout << grid.qtable[i][j] << endl;
+							assert(1 == 9);
+						}
+					}
+				}
+				/*cin >> lul;*/
 			}
 		}
 	}
-	
+	grid.displayq();
+	/*cout << "greedy actions " << greedy << "\nrandom actions " << random << endl;*/
 	ofstream outFile;   																									 // output file
 	outFile.open("Ta_Alton_493_ProjectBeta.txt");   																		 // name of output file
 	for (int w = 0; w < iterations; w++) {
 		outFile << w << "\t" << stepvector.at(w) << endl;   	 // outputs pull # and it's corresponding reward to a text file, action curves   	 
 	}
 	outFile.close();
-
-	/*pgrid->express(plearner);*/
-	cout << "You found Waldo! \n" << endl;
+	cout << "Snake has escaped from New York! \n" << endl;
 	return 0;
 }
